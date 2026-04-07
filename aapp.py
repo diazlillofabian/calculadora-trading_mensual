@@ -1,75 +1,82 @@
-import streamlit as st
 import pandas as pd
 
-st.set_page_config(page_title="Trading de Ganancia Mensual", layout="wide")
 
-st.title("📈 Trading de Ganancia Mensual")
+def generar_tabla_trading_mensual():
+    print("--- Configuración de Trading Mensual ---")
+    try:
+        # Entradas del usuario
+        capital_inicial = float(input("Ingresa el capital inicial: "))
+        porcentaje_mensual = (
+            float(input("Ingresa el porcentaje de ganancia mensual (ej. 10 para 10%): "))
+            / 100
+        )
+        retiro_input = input("Ingresa el retiro diario (%) (ej. 2 para 2% - por defecto 2): ")
+        retiro_fijo = float(retiro_input) if retiro_input.strip() else 2.0  # ahora trata como porcentaje
 
-# Sidebar para controles
-st.sidebar.header("Configuración de Capital (Mensual)")
-cap_inicial = st.sidebar.number_input("Capital Inicial", value=500000, step=10000)
-porcentaje = (
-    st.sidebar.number_input(
-        "Porcentaje Diario (%)",
-        min_value=0.0,
-        max_value=100.0,
-        value=10.0,
-        step=0.1,
-        format="%.2f",
-    )
-    / 100
-)
-retiro = st.sidebar.number_input("Retiro Diario Fijo", value=10000, step=1000)
+        datos = []
+        capital_actual = capital_inicial
 
-# Lógica de cálculo por meses (12 meses de 2026)
-datos = []
-saldo_actual = cap_inicial
+        meses_2026 = [
+            ("Enero", 31),
+            ("Febrero", 28),
+            ("Marzo", 31),
+            ("Abril", 30),
+            ("Mayo", 31),
+            ("Junio", 30),
+            ("Julio", 31),
+            ("Agosto", 31),
+            ("Septiembre", 30),
+            ("Octubre", 31),
+            ("Noviembre", 30),
+            ("Diciembre", 31),
+        ]
 
-# Días reales por mes para 2026
-meses_2026 = [
-    ("Enero", 31),
-    ("Febrero", 28),
-    ("Marzo", 31),
-    ("Abril", 30),
-    ("Mayo", 31),
-    ("Junio", 30),
-    ("Julio", 31),
-    ("Agosto", 31),
-    ("Septiembre", 30),
-    ("Octubre", 31),
-    ("Noviembre", 30),
-    ("Diciembre", 31),
-]
+        for mes_nombre, dias in meses_2026:
+            saldo_inicial = capital_actual
+            ganancia_mes = 0.0
+            retiro_mes = 0.0
 
-for mes_nombre, dias_mes in meses_2026:
-    saldo_inicial = saldo_actual
-    ganancia_mes_total = 0.0
-    retiro_mes_total = retiro * dias_mes
+            # Convertir porcentaje mensual a tasa diaria compuesta para el mes
+            tasa_diaria = (1 + porcentaje_mensual) ** (1 / dias) - 1 if porcentaje_mensual >= 0 else 0
 
-    # Simular día a día dentro del mes usando el porcentaje diario y el retiro diario
-    for _ in range(dias_mes):
-        ganancia = saldo_actual * porcentaje
-        ganancia_mes_total += ganancia
-        saldo_con_ganancia = saldo_actual + ganancia
-        saldo_actual = max(0, saldo_con_ganancia - retiro)
+            # Simular día a día dentro del mes
+            for _ in range(dias):
+                ganancia_dia = capital_actual * tasa_diaria
+                ganancia_mes += ganancia_dia
+                capital_con_ganancia = capital_actual + ganancia_dia
 
-    saldo_final = saldo_actual
+                retiro_diario = capital_con_ganancia * (retiro_fijo / 100.0)
+                retiro_mes += retiro_diario
 
-    datos.append(
-        {
-            "Mes": f"{mes_nombre} 2026",
-            "Saldo Inicial": f"{saldo_inicial:,.0f}",
-            "Ganancia (+)": f"{ganancia_mes_total:,.0f}",
-            "Retiro (-)": f"{retiro_mes_total:,.0f}",
-            "Retiro de Dinero": f"{retiro_mes_total:,.0f}",
-            "Saldo Final": f"{max(0, saldo_final):,.0f}",
-        }
-    )
+                capital_actual = max(0, capital_con_ganancia - retiro_diario)
 
-# Mostrar Tabla
-df = pd.DataFrame(datos)
-st.table(df)
+            saldo_final_mes = capital_actual
 
-# Gráfico de crecimiento
-st.subheader("Evolución del Capital")
-st.line_chart(df["Saldo Final"].str.replace(",", "").astype(float))
+            datos.append(
+                {
+                    "Mes": f"{mes_nombre} 2026",
+                    "Saldo Inicial": round(saldo_inicial, 2),
+                    "Ganancia (+)": round(ganancia_mes, 2),
+                    "Retiro (-)": round(retiro_mes, 2),
+                    "Saldo Final": round(saldo_final_mes, 2),
+                }
+            )
+
+        # Crear DataFrame
+        df = pd.DataFrame(datos)
+
+        # Mostrar tabla
+        print("\n" + "=" * 30)
+        print(" TRADING DE GANANCIA MENSUAL (2026) ")
+        print("=" * 30)
+        print(df.to_string(index=False))
+
+        print("\nResumen tras 12 meses:")
+        print("Capital Final:", round(capital_actual, 2))
+
+    except ValueError:
+        print("Por favor, ingresa números válidos.")
+
+
+if __name__ == "__main__":
+    generar_tabla_trading_mensual()
