@@ -1,12 +1,12 @@
 import streamlit as st
 import pandas as pd
 
-st.set_page_config(page_title="Trading de Ganancia Diaria", layout="wide")
+st.set_page_config(page_title="Trading de Ganancia Mensual", layout="wide")
 
-st.title("📈 Trading de Ganancia Diaria")
+st.title("📈 Trading de Ganancia Mensual")
 
 # Sidebar para controles
-st.sidebar.header("Configuración de Capital")
+st.sidebar.header("Configuración de Capital (Mensual)")
 cap_inicial = st.sidebar.number_input("Capital Inicial", value=500000, step=10000)
 porcentaje = (
     st.sidebar.number_input(
@@ -73,3 +73,4 @@ st.table(df)
 # Gráfico de crecimiento
 st.subheader("Evolución del Capital")
 st.line_chart(df["Saldo Final"].str.replace(",", "").astype(float))
+
