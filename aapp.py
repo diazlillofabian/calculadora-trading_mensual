@@ -73,4 +73,3 @@ st.table(df)
 # Gráfico de crecimiento
 st.subheader("Evolución del Capital")
 st.line_chart(df["Saldo Final"].str.replace(",", "").astype(float))
-
